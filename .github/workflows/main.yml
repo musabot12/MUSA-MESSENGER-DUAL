@@ -1,0 +1,230 @@
+
+name: MUSA MESSENGER DUAL APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Create Android Project
+        shell: bash
+        run: |
+          mkdir -p app/src/main/java/com/musa/messenger
+          mkdir -p app/src/main/res/values
+
+          cat > settings.gradle <<'EOF'
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          rootProject.name = "MUSA-MESSENGER-DUAL"
+          include(":app")
+          EOF
+
+          cat > build.gradle <<'EOF'
+          plugins {
+              id 'com.android.application' version '8.5.2' apply false
+          }
+          EOF
+
+          cat > gradle.properties <<'EOF'
+          org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+          android.useAndroidX=true
+          EOF
+
+          cat > app/build.gradle <<'EOF'
+          plugins {
+              id 'com.android.application'
+          }
+
+          android {
+              namespace 'com.musa.messenger'
+              compileSdk 35
+
+              defaultConfig {
+                  applicationId 'com.musa.messenger'
+                  minSdk 23
+                  targetSdk 35
+                  versionCode 1
+                  versionName '1.0'
+              }
+          }
+          EOF
+
+          cat > app/src/main/res/values/strings.xml <<'EOF'
+          <resources>
+              <string name="app_name">MUSA MESSENGER DUAL</string>
+          </resources>
+          EOF
+
+          cat > app/src/main/AndroidManifest.xml <<'EOF'
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <application
+                  android:label="@string/app_name"
+                  android:theme="@android:style/Theme.Material.Light.NoActionBar"
+                  android:usesCleartextTraffic="false">
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN"/>
+                          <category android:name="android.intent.category.LAUNCHER"/>
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          EOF
+
+          cat > app/src/main/java/com/musa/messenger/MainActivity.java <<'EOF'
+          package com.musa.messenger;
+
+          import android.app.Activity;
+          import android.os.Bundle;
+          import android.graphics.Color;
+          import android.graphics.Typeface;
+          import android.graphics.drawable.GradientDrawable;
+          import android.view.Gravity;
+          import android.view.ViewGroup;
+          import android.widget.LinearLayout;
+          import android.widget.TextView;
+          import android.widget.Button;
+
+          public class MainActivity extends Activity {
+
+              int bg = Color.rgb(12, 17, 38);
+              int accent = Color.rgb(100, 110, 255);
+
+              GradientDrawable shape(int color, int radius) {
+                  GradientDrawable d = new GradientDrawable();
+                  d.setColor(color);
+                  d.setCornerRadius(radius);
+                  return d;
+              }
+
+              TextView text(String value, int size, int color) {
+                  TextView t = new TextView(this);
+                  t.setText(value);
+                  t.setTextSize(size);
+                  t.setTextColor(color);
+                  t.setGravity(Gravity.CENTER);
+                  return t;
+              }
+
+              @Override
+              public void onCreate(Bundle state) {
+                  super.onCreate(state);
+                  getWindow().setStatusBarColor(bg);
+                  getWindow().setNavigationBarColor(bg);
+
+                  LinearLayout root = new LinearLayout(this);
+                  root.setOrientation(LinearLayout.VERTICAL);
+                  root.setGravity(Gravity.CENTER);
+                  root.setPadding(28, 30, 28, 30);
+                  root.setBackgroundColor(bg);
+
+                  TextView logo = text("M", 42, Color.WHITE);
+                  logo.setTypeface(null, Typeface.BOLD);
+                  logo.setBackground(shape(accent, 100));
+                  LinearLayout.LayoutParams lp =
+                      new LinearLayout.LayoutParams(100, 100);
+                  lp.gravity = Gravity.CENTER;
+                  root.addView(logo, lp);
+
+                  TextView title = text(
+                      "MUSA MESSENGER DUAL", 25, Color.WHITE);
+                  title.setTypeface(null, Typeface.BOLD);
+                  title.setPadding(0, 25, 0, 8);
+                  root.addView(title);
+
+                  TextView subtitle = text(
+                      "Your space. Your conversations.", 15,
+                      Color.LTGRAY);
+                  root.addView(subtitle);
+
+                  LinearLayout card = new LinearLayout(this);
+                  card.setOrientation(LinearLayout.VERTICAL);
+                  card.setPadding(18, 22, 18, 22);
+                  card.setBackground(shape(
+                      Color.rgb(27, 34, 64), 28));
+
+                  LinearLayout.LayoutParams cp =
+                      new LinearLayout.LayoutParams(
+                          ViewGroup.LayoutParams.MATCH_PARENT,
+                          ViewGroup.LayoutParams.WRAP_CONTENT);
+                  cp.setMargins(0, 35, 0, 20);
+                  root.addView(card, cp);
+
+                  TextView welcome = text(
+                      "Welcome to MUSA", 22, Color.WHITE);
+                  welcome.setTypeface(null, Typeface.BOLD);
+                  card.addView(welcome);
+
+                  TextView info = text(
+                      "Your new Android app is ready to explore.",
+                      15, Color.LTGRAY);
+                  info.setPadding(0, 15, 0, 15);
+                  card.addView(info);
+
+                  Button button = new Button(this);
+                  button.setText("GET STARTED");
+                  button.setTextColor(Color.WHITE);
+                  button.setBackground(shape(accent, 22));
+                  card.addView(button);
+
+                  button.setOnClickListener(v -> {
+                      info.setText(
+                          "Welcome! MUSA Messenger is running.");
+                      button.setText("READY");
+                  });
+
+                  TextView footer = text(
+                      "MUSA • VERSION 1.0", 12,
+                      Color.rgb(170, 180, 210));
+                  root.addView(footer);
+
+                  setContentView(root);
+              }
+          }
+          EOF
+
+      - name: Build Debug APK
+        uses: gradle/gradle-build-action@v3
+        with:
+          gradle-version: '8.7'
+          arguments: assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MUSA-MESSENGER-DUAL-APK
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 7
+          
